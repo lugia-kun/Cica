@@ -208,6 +208,35 @@ def align_to_center(_g):
 
     return _g
 
+def align_to_left_adjust_width(_g):
+    width = 0
+    if _g.width > 700:
+        width = 1024
+    else:
+        width = 512
+
+    offset = (width - _g.width) / 2
+    _g.width = width
+    _g.transform(psMat.translate(offset, 0))
+    _g.width = width
+
+    return _g
+
+def align_to_right_adjust_width(_g):
+    width = 0
+
+    if _g.width > 700:
+        width = 1024
+    else:
+        width = 512
+
+    offset = (width - _g.width) / 2
+    _g.width = width
+    _g.transform(psMat.translate(offset, 0))
+    _g.width = width
+
+    return _g
+
 def align_to_left(_g):
     width = _g.width
     _g.left_side_bearing = 0
@@ -548,18 +577,22 @@ def build_font(_f):
             # g.stroke("circular", _f.get('mgen_weight_add'), 'butt', 'round', 'removeinternal')
 
 
-    ignoring_center = [
-        0x3001, 0x3002, 0x3008, 0x3009, 0x300a, 0x300b, 0x300c, 0x300d,
-        0x300e, 0x300f, 0x3010, 0x3011, 0x3014, 0x3015, 0x3016, 0x3017,
-        0x3018, 0x3019, 0x301a, 0x301b, 0x301d, 0x301e, 0x3099, 0x309a,
-        0x309b, 0x309c,
+    cica_align_left = [
+        0x3001, 0x3002, 0x3009, 0x300b, 0x300d, 0x300f, 0x3011, 0x3015,
+        0x3017, 0x3019, 0x301b, 0x301e, 0x3099, 0x309a, 0x309b, 0x309c,
+    ]
+    cica_align_right = [
+        0x3008, 0x300a, 0x300c, 0x300e, 0x3010, 0x3014, 0x3016, 0x3018,
+        0x301a, 0x301e,
     ]
     for g in cica.glyphs():
         g.transform((0.91,0,0,0.91,0,0))
         if _f.get('italic'):
             g.transform(psMat.skew(0.25))
-        if g.encoding in ignoring_center:
-            pass
+        if g.encoding in cica_align_left:
+            g = align_to_left_adjust_width(g)
+        elif g.encoding in cica_align_right:
+            g = align_to_right_adjust_width(g)
         else:
             g = align_to_center(g)
 
