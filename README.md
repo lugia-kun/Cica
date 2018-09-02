@@ -1,54 +1,28 @@
-# プログラミング用日本語等幅フォント Cica
+(工事中)
 
-![on MacVim](screenshots/ss1.png)
+# プログラミング用日本語等幅フォント [TBD]
 
 ## ダウンロード
-
-[リリースページ](https://github.com/miiton/Cica/releases/latest)にビルド済みのフォントを配置しています。
 
 ## 特徴
 
 * 以下のフォントを合成後に調整した、プログラミング向けの等幅日本語フォントです
-    - 英数字、記号類に [Ubuntu Mono](http://font.ubuntu.com/)
-    - それ以外の文字に [Rounded Mgen+](http://jikasei.me/font/rounded-mgenplus/)
-    - [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) (= Powerlineパッチ、その他適用済、Pomiconsを除く※)
-    - [Noto Emoji](https://www.google.com/get/noto/)
-* 各種エディタで迷わずに設定できるフォント名にしました(ex. `Hoge Font`, `Hoge_Font` or `Hoge Font Regular`  ??? ARGGGG!!! )
-* tmuxの画面分割に対応しています
-* 非HiDPI（非Retina）のWindowsでも文字が欠けません
+<!-- * 各種エディタで迷わずに設定できるフォント名にしました(ex. `Hoge Font`, `Hoge_Font` or `Hoge Font Regular`  ??? ARGGGG!!! )-->
+<!-- * tmuxの画面分割に対応しています -->
+<!-- * 非HiDPI（非Retina）のWindowsでも文字が欠けません -->
+* Ambiguous Width の設定を Narrow で使うことを前提としています
 
-```
-o Cica
-|\
-* * NERDFonts (without Pomicons※)
-|\
-* * Noto Emoji (無しバージョンあり)
-|\
-* * DejaVu Sans Mono
-|\
-* * Ubuntu Mono
- \
-  * Rounded Mgen+
-  |\
-  | * 源の角ゴシック
-  |
-  * Rounded M+
-  |
-  * M+ OUTLINE FONTS
-```
-
-※Nerd Fontsに含まれるPomiconsのグリフは商用利用が出来ないライセンスなのでCicaフォントからは除外しています。
+フォントの大部分を占める「源ノ角ゴシック」が SIL OPEN FONT LICENSE 1.1 でライセンスされているため、SIL OPEN FONT LICENSE 1.1 以外でライセンスされたのフォントからのグリフは使用しないようにしています。
 
 ## バリエーション
 
-| ファイル名             | 説明     |
-| ----                   | ----     |
-| Cica-Regular.ttf       | 通常     |
-| Cica-RegularItalic.ttf | 斜体     |
-| Cica-Bold.ttf          | 太字     |
-| Cica-BoldItalic.ttf    | 太字斜体 |
+| ファイル名              | 説明     |
+| ----                    | ----     |
+| [TBD]-Regular.ttf       | 通常     |
+| [TBD]-RegularItalic.ttf | 斜体     |
+| [TBD]-Bold.ttf          | 太字     |
+| [TBD]-BoldItalic.ttf    | 太字斜体 |
 
-※アイコン類はフォントをインストール後 [https:\/\/miiton.github.io\/Cica\/](https://miiton.github.io/Cica/) で確認出来ます。
 
 ## ビルド手順
 
@@ -90,21 +64,20 @@ fontforge 20120731
 libfontforge 20120731-ML
 ```
 
-
 # ライセンス
 
-* [LICENSE.txt](LICENSE.txt)
+* 生成スクリプトは MIT License の元で使用許諾されます。
+  - See [LICENSE.script.txt](LICENSE.script.txt)
+
+* 生成スクリプトを用いて生成されたフォントは、SIL OPEN FONT LICENSE 1.1 の元で使用許諾されます。
+  - See [LICENSE.font.txt](LICENSE.font.txt)
+
+* 以下のグリフは自作です。これらのグリフのソース形態（つまり、SVG ファイル）は、CC0 1.0 Universal で提供（著作権を放棄）します。[src/COPYING](src/COPYING)
+
+  - (まだない)
 
 # 謝辞
 
-Cicaフォントの合成にあたり素晴らしいフォントを提供してくださっている製作者の方々に感謝いたします。
+[TBD] フォントの合成にあたり素晴らしいフォントを提供してくださっている製作者の方々に感謝いたします。
 
-- M+ OUTLINE FONTS : [M\+ FONTS](https://mplus-fonts.osdn.jp/)
-- Rounded M+ : [自家製フォント工房](http://jikasei.me/)
 - 源の角ゴシック : [adobe\-fonts/source\-han\-sans: Source Han Sans \| 思源黑体 \| 思源黑體 \| 源ノ角ゴシック \| 본고딕](https://github.com/adobe-fonts/source-han-sans)
-- Rounded Mgen+ : [自家製フォント工房](http://jikasei.me/)
-- Ubuntu Mono : [Ubuntu Font Family](http://font.ubuntu.com/)
-- Noto Emoji : [googlei18n/noto\-emoji: Noto Emoji fonts](https://github.com/googlei18n/noto-emoji)
-- NERDFonts (without Pomicons) : [Nerd Fonts \- Iconic font aggregator, collection, and patcher](https://nerdfonts.com/)
-- DejaVu Sans Mono : [DejaVu Fonts](https://dejavu-fonts.github.io/)
-

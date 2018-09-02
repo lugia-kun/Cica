@@ -19,9 +19,9 @@ logger.addHandler(handler)
 ASCENT = 820
 DESCENT = 204
 SOURCE = './sourceFonts'
-LICENSE = open('./LICENSE.txt').read()
+LICENSE = open('./LICENSE.font.txt').read()
 COPYRIGHT = open('./COPYRIGHT.txt').read()
-VERSION = '3.0.0'
+VERSION = '0.0.0'
 FAMILY = 'Cica'
 
 fonts = [
@@ -79,22 +79,6 @@ fonts = [
 def log(str):
     logger.debug(str)
 
-def remove_glyph_from_ubuntu(_font):
-    u"""Rounded Mgen+を採用したいグリフをUbuntuMonoから削除
-    """
-    log('remove_ambiguous() : %s' % _font.fontname)
-
-    glyphs = [
-            0x2026, # …
-            ]
-
-    for g in glyphs:
-        _font.selection.select(g)
-        _font.clear()
-
-    return _font
-
-
 def check_files():
     err = 0
     for f in fonts:
@@ -124,7 +108,7 @@ def set_os2_values(_font, _info):
         _font.os2_stylemap = 1
     elif style_name == 'Bold Italic':
         _font.os2_stylemap = 33
-    _font.os2_vendor = 'TMNM'
+    _font.os2_vendor = 'misc'
     _font.os2_version = 1
     _font.os2_winascent = ASCENT
     _font.os2_winascent_add = False

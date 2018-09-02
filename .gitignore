@@ -3,5 +3,7 @@ sourceFonts/*
 Cica/*
 .DS_Store
 *.orig
+*~
+\#*
 dist/*
 ubuntu-font-family-0.83*
