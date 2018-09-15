@@ -8,12 +8,13 @@ import re
 import sys
 import math
 import glob
+from xml.dom import minidom
 from logging import getLogger, StreamHandler, Formatter, DEBUG
 
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
-formatter = Formatter('%(asctime)s [%(levelname)s] : %(message)s')
+formatter = Formatter('%(asctime)s [%(levelname)s]: %(message)s')
 handler.setFormatter(formatter)
 logger.setLevel(DEBUG)
 logger.addHandler(handler)
@@ -26,11 +27,90 @@ DESCENT = 410
 #DESCENT = 205
 SOURCE = './sourceFonts'
 LICENSE = open('./LICENSE.font.txt').read()
+LICENSE_URL = "http://scripts.sil.org/OFL"
 COPYRIGHT = open('./COPYRIGHT.txt').read()
-VERSION = '0.0.0'
-FAMILY = 'T'
+VERSION = '0.0.1'
+FAMILY = 'Ocami'
+ITALIC_ANGLE = -9
+ITALIC_SKEW = psMat.skew(-ITALIC_ANGLE / 180.0 * math.pi)
+ITALIC_SHIFT = math.tan(-ITALIC_ANGLE / 180.0 * math.pi) * 0.5
 
-err = 0
+source_info = {
+    "IBMPlexMono": {
+        "base": "IBMPlexMono-",
+        "weights": [
+            "Thin",
+            "ExtraLight",
+            "Light",
+            "Regular",
+            "Text",
+            "Medium",
+            "SemiBold",
+            "Bold",
+        ],
+        "have_italic": {
+            "Thin": "ThinItalic",
+            "ExtraLight": "ExtraLightItalic",
+            "Light": "LightItalic",
+            "Regular": "Italic",
+            "Text": "TextItalic",
+            "Medium": "MediumItalic",
+            "SemiBold": "SemiBoldItalic",
+            "Bold": "BoldItalic",
+        },
+        "format": ".ttf", # IBM also distributes OTF.
+    },
+    "AnonymousPro": {
+        "base": "AnonymousPro-",
+        "weights": [
+            "Regular",
+            "Bold",
+        ],
+        "have_italic": {
+            "Regular": "Italic",
+            "Bold": "BoldItalic",
+        },
+        "format": ".ttf",
+    },
+    "FiraMono": {
+        "base": "FiraMono-",
+        "weights": [
+            "Regular",
+            "Medium",
+            "Bold",
+        ],
+        "have_italic": False,
+        "format": ".ttf",
+    },
+    "SourceHanSans": {
+        "base": "SourceHanSans-",
+        "weights": [
+            "ExtraLight",
+            "Light",
+            "Normal",
+            "Regular",
+            "Medium",
+            "Bold",
+            "Heavy",
+        ],
+        "have_italic": False,
+        "format": ".otf",
+    },
+}
+
+def font_fn(family, weight, italic):
+    hsh = source_info[family]
+    if not weight in hsh["weights"]:
+        raise KeyError("Weight '%s' does not defined for %s" %
+                       (weight, family))
+    wn = weight
+    if italic:
+        if hsh["have_italic"]:
+            wn = hsh["have_italic"][weight]
+        else:
+            raise KeyError("Italic for weight %s does not defined for %s" %
+                           (weight, family))
+    return hsh["base"] + wn + hsh["format"]
 
 fonts = [
     {
@@ -42,20 +122,22 @@ fonts = [
         'style_name': 'Regular',
         'src_fonts': {
             'ibm_plex': 'IBMPlexMono-Regular.ttf',
+            'fira_mono': 'FiraMono-Regular.ttf',
             'anonymous_pro': 'AnonymousPro-Regular.ttf',
             'source_han_sans': 'SourceHanSans-Regular.otf',
         },
         'italic': False,
     }, {
         'family': FAMILY,
-        'name': FAMILY + '-RegularItalic',
-        'filename': FAMILY + '-RegularItalic.ttf',
+        'name': FAMILY + '-Italic',
+        'filename': FAMILY + '-Italic.ttf',
         'weight': 400,
         'weight_name': 'Regular',
         'style_name': 'Italic',
         'src_fonts': {
-            'ibm_plex': 'IBMPlexMono-MediumItalic.ttf',
-            'anonymous_pro': 'AnonymousPro-RegularItalic.ttf',
+            'ibm_plex': 'IBMPlexMono-Italic.ttf',
+            'fira_mono': 'FiraMono-Regular.ttf',
+            'anonymous_pro': 'AnonymousPro-Italic.ttf',
             'source_han_sans': 'SourceHanSans-Regular.otf',
         },
         'italic': True,
@@ -68,6 +150,7 @@ fonts = [
         'style_name': 'Bold',
         'src_fonts': {
             'ibm_plex': 'IBMPlexMono-Bold.ttf',
+            'fira_mono': 'FiraMono-Bold.ttf',
             'anonymous_pro': 'AnonymousPro-Bold.ttf',
             'source_han_sans': 'SourceHanSans-Bold.otf',
         },
@@ -81,6 +164,7 @@ fonts = [
         'style_name': 'Bold Italic',
         'src_fonts': {
             'ibm_plex': 'IBMPlexMono-BoldItalic.ttf',
+            'fira_mono': 'FiraMono-Bold.ttf',
             'anonymous_pro': 'AnonymousPro-BoldItalic.ttf',
             'source_han_sans': 'SourceHanSans-Bold.otf',
         },
@@ -91,15 +175,14 @@ fonts = [
 def log(str):
     logger.debug(str)
 
-    if err > 0:
-        sys.exit(err)
-
 def set_os2_values(_font, _info):
     weight = _info.get('weight')
     style_name = _info.get('style_name')
+    _font.os2_family_class = 2057
     _font.os2_weight = weight
     _font.os2_width = 5
     _font.os2_fstype = 0
+    _font.os2_use_typo_metrics = 0
     if style_name == 'Regular':
         _font.os2_stylemap = 64
     elif style_name == 'Bold':
@@ -109,33 +192,23 @@ def set_os2_values(_font, _info):
     elif style_name == 'Bold Italic':
         _font.os2_stylemap = 33
     _font.os2_vendor = 'misc'
-    _font.os2_version = 4
+    _font.os2_version = 1
     _font.os2_winascent = ASCENT
     _font.os2_winascent_add = False
     _font.os2_windescent = DESCENT
     _font.os2_windescent_add = False
 
-    _font.os2_typoascent = 0
+    _font.os2_typoascent = -300
     _font.os2_typoascent_add = True
-    _font.os2_typodescent = 0
+    _font.os2_typodescent = 200
     _font.os2_typodescent_add = True
     _font.os2_typolinegap = 0
 
-    _font.hhea_ascent = 0
-    _font.hhea_ascent_add = True
-    _font.hhea_descent = 0
-    _font.hhea_descent_add = True
+    _font.hhea_ascent = ASCENT
+    _font.hhea_ascent_add = False
+    _font.hhea_descent = DESCENT
+    _font.hhea_descent_add = False
 
-    #_font.os2_typoascent = -150
-    #_font.os2_typoascent_add = True
-    #_font.os2_typodescent = 100
-    #_font.os2_typodescent_add = True
-    #_font.os2_typolinegap = 0
-
-    #_font.hhea_ascent = -150
-    #_font.hhea_ascent_add = True
-    #_font.hhea_descent = 100
-    #_font.hhea_descent_add = True
     _font.hhea_linegap = 0
     _font.os2_panose = (2, 11, int(weight / 100), 9, 2, 2, 3, 2, 2, 7)
     return _font
@@ -173,6 +246,24 @@ def add_source_han_sans(target, source, italic):
 
             g.transform(psMat.translate(new_w / 2.0 - old_w / 2.0,0.0))
             g.width = new_w
+
+    if italic:
+        log("%s: Skewing %d degrees..." % (srcfont.fontname, ITALIC_ANGLE))
+        move = ITALIC_SHIFT
+
+        for g in srcfont.glyphs():
+            old_w = g.width
+            if old_w > 0:
+                if old_w < 1536:
+                    new_w = 1024
+                else:
+                    new_w = 2048
+
+            g.transform(ITALIC_SKEW)
+            g.transform(psMat.translate(-ITALIC_SHIFT,0.0))
+
+            if old_w > 0:
+                g.width = new_w
 
     srcfont.ascent = ASCENT
     srcfont.descent = DESCENT
@@ -604,6 +695,22 @@ def add_source_han_sans(target, source, italic):
                 before = tab[i + 1]
             contexts[tab] = before
         else:
+            feat = info[2]
+            if len(feat) == 0:
+                log("%s: .. Skipped importing lookup \"%s\"" %
+                    (srcfont.fontname, tab))
+                continue
+
+            liga = False
+            for t in feat:
+                if t[0] == "liga":
+                    liga = True
+                    break
+            if liga:
+                log("%s: .. Skipped standard liga (because mintty applies)" %
+                    (srcfont.fontname))
+                continue
+
             subtab = srcfont.getLookupSubtables(tab)
             m = []
             for t in subtab:
@@ -694,22 +801,125 @@ def add_source_han_sans(target, source, italic):
         exit(1)
 
     subtab_map = {}
+    subtable_info = {}
     log("%s: Importing Subtable maps..." % (srcfont.fontname))
     for m in gsubtables:
         target.importLookups(srcfont, m)
+        info = target.getLookupInfo(m)
         tgtsub = target.getLookupSubtables(m)
         srcsub = gsubtables[m]
         for i in range(0,len(srcsub)):
             subtab_map[srcsub[i]] = tgtsub[i]
+            subtable_info[tgtsub[i]] = info
 
-    print(subtab_map)
+    # Clear tables
+    log("%s: .. Clearing all gsub maps..." % (srcfont.fontname))
+    for g in target.glyphs():
+        for tab in subtab_map.values():
+            g.removePosSub(tab)
+
+    log("%s: .. Rebuild gsub maps..." % (srcfont.fontname))
+    for subsname in subtab_map:
+        subtname = subtab_map[subsname]
+        tabsrc = subtable_data.get(subsname)
+        if tabsrc is None:
+            log("%s: .. No data found for map \"%s\". Skipped." %
+                (srcfont.fontname, subsname))
+            continue
+
+        subttype = subtable_info[subsname][0]
+
+        unilst = []
+        for uni in tabsrc:
+            unilst.append((uni,uni))
+            l = copyrev.get(uni)
+            if not l is None:
+                for x in l:
+                    unilst.append((x,uni))
+
+        for uni in unilst:
+            tabuni = uni[1]
+            uni = uni[0]
+
+            g = None
+            try:
+                g = target[uni]
+            except:
+                "NOP"
+
+            if g is None and type(uni) is str:
+                gs = srcfont[uni]
+                altuni = gs.altuni
+                if not altuni is None:
+                    for enc in altuni:
+                        try:
+                            g = target[enc[0]]
+                            break
+                        except:
+                            "NOP"
+
+                    if not g is None:
+                        log("%s: .. U+%04x will be used instead of %s" %
+                            (srcfont.fontname, g.unicode, uni))
+
+            if g is None:
+                if type(uni) is int:
+                    uni = "U+%04x" % uni
+                log("%s: .. %s were not copied." % (srcfont.fontname, uni))
+                continue
+
+            lst = tabsrc[tabuni]
+            alst = []
+            for i in lst:
+                gx = target[i]
+                alst.append(gx.glyphname)
+
+            if subttype == "gsub_single":
+                g.addPosSub(subtname, alst[0])
+            elif subttype == "gsub_ligature" or subttype == "gsub_alternate":
+                g.addPosSub(subtname, tuple(alst))
+            else:
+                log("%s: .. Subtable type %s is not supported." %
+                    (srcfont.fontname, subttype))
+                exit(1)
 
     srcfont.close()
 
-def add_ibm_plex(target, source):
+    # Both IBM Plex and Fira Mono uses 600 width in 1000 em.
+def add_ibm_plex_or_fira_mono(target, source, slant, ranges):
     log("Reading %s..." % source.get("path"))
     srcfont = fontforge.open(source.get("path"))
 
+    # Unlink references because resize breaks position
+    srcfont.selection.all()
+    srcfont.unlinkReferences()
+
+    srcfont.selection.none()
+    target.selection.none()
+    for m in ranges:
+        if type(m) is tuple:
+            f = m[0]
+            t = m[1]
+        elif type(m) is range:
+            f = m.start
+            t = m.stop - 1
+        else:
+            f = m
+            t = m
+
+        srcfont.selection.select(("ranges","more"),f,t)
+        target.selection.select(("ranges","more"),f,t)
+
+    log("%s: Remove not required glyphs..." % (srcfont.fontname))
+    srcfont.selection.invert()
+    for enc in srcfont.selection:
+        try:
+            g = srcfont[enc]
+        except TypeError:
+            continue
+        srcfont.removeGlyph(g)
+
+    srcfont.selection.invert()
     gpos_lookups = srcfont.gpos_lookups
     for lookup in gpos_lookups:
         subt = srcfont.getLookupSubtables(lookup)
@@ -721,51 +931,59 @@ def add_ibm_plex(target, source):
         if len(anch) > 0:
             target.importLookups(srcfont, lookup)
 
-    #srcfont.selection.all()
-    #srcfont.unlinkReferences()
-
     ascent = srcfont.ascent
     scale = float(ASCENT) / ascent
 
     if scale != 1.0:
         log("%s: Scaling %g%%..." % (srcfont.fontname, scale * 100.0))
-        srcfont.transform(psMat.scale(scale,scale))
+        mat = psMat.scale(scale,scale)
+        srcfont.transform(mat)
 
-    log("%s: Adjusting width..." % (srcfont.fontname))
+    log("%s: Adjusting width and move anchors..." % (srcfont.fontname))
     for g in srcfont.glyphs():
         if g.width > 0.0:
             scale = (ASCENT + DESCENT) / 2 / g.width
-            g.transform(psMat.scale(scale,scale))
+            mat = psMat.scale(scale,scale)
+            g.transform(mat)
+
+    if slant:
+        log("%s: Create slant font by skewing %d degrees" %
+            (srcfont.fontname, ITALIC_ANGLE))
+        for g in srcfont.glyphs():
+            w = g.width
+            tf = ITALIC_SKEW
+            tf = psMat.compose(tf,psMat.translate(-ITALIC_SHIFT,0.0))
+            g.transform(tf)
+            g.width = w
+
 
     log("%s: Copying glyphs..." % (srcfont.fontname))
-    for g in srcfont.glyphs():
-        if g.unicode < 0:
-            gt = target.createChar(-1,g.glyphname)
-            tenc = gt.encoding
-        else:
-            tenc = g.encoding
-
-        srcfont.selection.select(g.encoding)
-        srcfont.copy()
-        target.selection.select(tenc)
-        target.paste()
+    srcfont.copy()
+    target.paste()
 
     srcfont.close()
 
 def add_own_symbols(target):
     log("Putting original symbols...")
-    scale = (ASCENT + DESCENT) / 2048
-    for svg in glob.glob("src/[0-9a-f]*.svg"):
+    for svg in glob.glob("src/uni[0-9a-fA-F]*.svg"):
         svg_fn = os.path.basename(svg)
-        m = re.match(r'[0-9a-f]+', svg_fn)
+        m = re.match(r'uni([0-9a-fA-F]+)', svg_fn)
         if m is None: continue
-        x = int(m.group(0), 16)
-        log("Adding U+%04x..." % x)
+        enc = int(m.group(1), 16)
+        doc = minidom.parse(svg)
+        svgroot = doc.documentElement
+        width = float(svgroot.getAttribute("width"))
+        height = float(svgroot.getAttribute("height"))
+        doc.unlink()
+        scale = (ASCENT + DESCENT) / height
+        log("Adding U+%04x..." % enc)
         try:
-            g = target[x]
+            g = target[enc]
+            g.clear()
         except:
-            g = target.createChar(x)
+            g = target.createChar(enc)
         g.importOutlines(svg)
+        g.width = width
         g.transform(psMat.scale(scale,scale))
 
 
@@ -785,10 +1003,37 @@ def build_font(_f, emoji):
     build.ascent = ASCENT
     build.descent = DESCENT
 
-    add_source_han_sans(build, sources.get("source_han_sans"), _f.get("italic"))
-    add_ibm_plex(build, sources.get("ibm_plex"))
+    add_source_han_sans(build, sources["source_han_sans"], _f["italic"])
+    add_ibm_plex_or_fira_mono(build, sources["ibm_plex"], False,
+                              [
+                                  (0x0020,0x007e), # Latin
+                                  (0x00a0,0x036f), # Latin-Extended
+                                   0x0e3f,         # Thai
+                                  (0x1e80,0x1eff), # Latin-Extended-Additional
+                                  (0x2000,0x20cf), # Puct, Sub/Sub, Currency
+                                  (0x2100,0x215f), # Litter like, Number form
+                                  (0x2190,0x21ff), # Arrows
+                                  (0x2200,0x22ff), # Maths
+                                   0xebe7,         # Fun
+                                  (0xf6d7,0xf6d8), # ?
+                                  (0xfb01,0xfb02), # Lig forms
+                              ])
+
+    add_ibm_plex_or_fira_mono(build, sources["fira_mono"], _f["italic"],
+                              [
+                                  (0x0370,0x03ff), # Greek
+                                  (0x0400,0x052f), # Cyrillic
+                                  (0x1f00,0x1fff), # Geek Extended
+                                  (0x2300,0x23ff), # Misc Technical
+                                  (0x25a0,0x267f), # Misc Symbols
+                              ])
+
     add_own_symbols(build)
 
+    if _f["italic"]:
+        build.italicangle = ITALIC_ANGLE
+    else:
+        build.italicangle = 0
     build.ascent = ASCENT
     build.descent = DESCENT
     build.fontname = _f.get('family')
@@ -810,7 +1055,7 @@ def build_font(_f, emoji):
     # build.appendSFNTName(0x411,11, "")
     # build.appendSFNTName(0x411,12, "")
     build.appendSFNTName(0x411,13, LICENSE)
-    # build.appendSFNTName(0x411,14, "")
+    build.appendSFNTName(0x411,14, LICENSE_URL)
     # build.appendSFNTName(0x411,15, "")
     build.appendSFNTName(0x411,16, _f.get('family'))
     build.appendSFNTName(0x411,17, _f.get('style_name'))
@@ -828,242 +1073,52 @@ def build_font(_f, emoji):
     # build.appendSFNTName(0x409,11, "")
     # build.appendSFNTName(0x409,12, "")
     build.appendSFNTName(0x409,13, LICENSE)
-    # build.appendSFNTName(0x409,14, "")
+    build.appendSFNTName(0x409,14, LICENSE_URL)
     # build.appendSFNTName(0x409,15, "")
     build.appendSFNTName(0x409,16, _f.get('family'))
     build.appendSFNTName(0x409,17, _f.get('style_name'))
+
+    fw = ASCENT + DESCENT
+    for g in build.glyphs():
+        w = g.width
+        uni = g.unicode
+        name = g.glyphname
+        lb = g.left_side_bearing
+        rb = g.right_side_bearing
+        if uni >= 0:
+            name = "%s (U+%04x)" % (name, uni)
+        if w > fw:
+            log("%s has width longer than %d, %d" % (name, fw, w))
+        elif lb < 0 or rb < 0:
+            log("%s is sticked out of the character width" % (name))
+            if lb < 0:
+                log(" ... about %d ticks left" % (-lb))
+            else: lb = 0
+            if rb < 0:
+                log(" ... about %d ticks right" % (-rb))
+            else: rb = 0
+            d = w - lb - rb
+            if d > fw:
+                log(" ... total width longer than %d, %d" % (fw, d))
+
 
     fontpath = "dist/%s" % _f.get("filename")
     log("Writing %s..." % fontpath)
     build.generate(fontpath)
     build.close()
 
-    exit(1)
-
-    ubuntu = fontforge.open('./sourceFonts/%s' % _f.get('ubuntu_mono'))
-    ubuntu = remove_glyph_from_ubuntu(ubuntu)
-    cica = fontforge.open('./sourceFonts/%s' % _f.get('mgen_plus'))
-    nerd = fontforge.open('./sourceFonts/nerd.ttf')
-
-    #    for g in nerd.glyphs():
-    #        if g.encoding < 0xe0a0 or g.encoding > 0xf4ff:
-    #            continue
-    #        g = modify_nerd(g)
-    #        nerd.selection.select(g.encoding)
-    #        nerd.copy()
-    #        cica.selection.select(g.encoding)
-    #        cica.paste()
-
-    cica = fix_box_drawings(cica)
-    cica = zenkaku_space(cica)
-    cica = vertical_line_to_broken_bar(cica)
-    cica = emdash_to_broken_dash(cica)
-    cica = add_gopher(cica)
-    if emoji:
-        cica = add_notoemoji(cica)
-    cica = add_smalltriangle(cica)
-    cica = add_dejavu(cica, _f)
-    cica = resize_supersub(cica)
-
-    cica.ascent = ASCENT
-    cica.descent = DESCENT
-    cica.upos = -340
-    cica.uwidth = 120
-    if emoji:
-        fontpath = './dist/%s' % _f.get('filename')
-    else:
-        fontpath = './dist/noemoji/%s' % _f.get('filename')
-
-    cica.generate(fontpath)
-
-    cica.close()
-    ubuntu.close()
-    nerd.close()
-
-
-def add_notoemoji(_f):
-    notoemoji = fontforge.open('./sourceFonts/NotoEmoji-Regular.ttf')
-    for g in notoemoji.glyphs():
-        if g.isWorthOutputting and g.encoding > 0x04f9:
-            g.transform((0.42,0,0,0.42,0,0))
-            g = align_to_center(g)
-            notoemoji.selection.select(g.encoding)
-            notoemoji.copy()
-            _f.selection.select(g.encoding)
-            _f.paste()
-    notoemoji.close()
-    return _f
-
-def add_gopher(_f):
-    gopher = fontforge.open('./sourceFonts/gopher.sfd')
-    for g in gopher.glyphs():
-        if g.isWorthOutputting:
-            gopher.selection.select(0x40)
-            gopher.copy()
-            _f.selection.select(0xE160)
-            _f.paste()
-            g.transform(psMat.compose(psMat.scale(-1, 1), psMat.translate(g.width, 0)))
-            gopher.copy()
-            _f.selection.select(0xE161)
-            _f.paste()
-    gopher.close()
-    return _f
-
-def resize_supersub(_f):
-    superscripts = [
-            {"src": 0x0031, "dest": 0x00b9}, {"src": 0x0032, "dest": 0x00b2},
-            {"src": 0x0033, "dest": 0x00b3}, {"src": 0x0030, "dest": 0x2070},
-            {"src": 0x0069, "dest": 0x2071}, {"src": 0x0034, "dest": 0x2074},
-            {"src": 0x0035, "dest": 0x2075}, {"src": 0x0036, "dest": 0x2076},
-            {"src": 0x0037, "dest": 0x2077}, {"src": 0x0038, "dest": 0x2078},
-            {"src": 0x0039, "dest": 0x2079}, {"src": 0x002b, "dest": 0x207a},
-            {"src": 0x002d, "dest": 0x207b}, {"src": 0x003d, "dest": 0x207c},
-            {"src": 0x0028, "dest": 0x207d}, {"src": 0x0029, "dest": 0x207e},
-            {"src": 0x006e, "dest": 0x207f},
-            # ↓上付きの大文字
-            {"src": 0x0041, "dest": 0x1d2c}, {"src": 0x00c6, "dest": 0x1d2d},
-            {"src": 0x0042, "dest": 0x1d2e}, {"src": 0x0044, "dest": 0x1d30},
-            {"src": 0x0045, "dest": 0x1d31}, {"src": 0x018e, "dest": 0x1d32},
-            {"src": 0x0047, "dest": 0x1d33}, {"src": 0x0048, "dest": 0x1d34},
-            {"src": 0x0049, "dest": 0x1d35}, {"src": 0x004a, "dest": 0x1d36},
-            {"src": 0x004b, "dest": 0x1d37}, {"src": 0x004c, "dest": 0x1d38},
-            {"src": 0x004d, "dest": 0x1d39}, {"src": 0x004e, "dest": 0x1d3a},
-            ## ↓REVERSED N なのでNを左右反転させる必要あり
-            {"src": 0x004e, "dest": 0x1d3b, "reversed": True},
-            {"src": 0x004f, "dest": 0x1d3c}, {"src": 0x0222, "dest": 0x1d3d},
-            {"src": 0x0050, "dest": 0x1d3e}, {"src": 0x0052, "dest": 0x1d3f},
-            {"src": 0x0054, "dest": 0x1d40}, {"src": 0x0055, "dest": 0x1d41},
-            {"src": 0x0057, "dest": 0x1d42},
-            # ↓上付きの小文字
-            {"src": 0x0061, "dest": 0x1d43}, {"src": 0x0250, "dest": 0x1d44},
-            {"src": 0x0251, "dest": 0x1d45}, {"src": 0x1d02, "dest": 0x1d46},
-            {"src": 0x0062, "dest": 0x1d47}, {"src": 0x0064, "dest": 0x1d48},
-            {"src": 0x0065, "dest": 0x1d49}, {"src": 0x0259, "dest": 0x1d4a},
-            {"src": 0x025b, "dest": 0x1d4b}, {"src": 0x025c, "dest": 0x1d4c},
-            {"src": 0x0067, "dest": 0x1d4d},
-            ## ↓TURNED i なので 180度回す必要あり
-            {"src": 0x0069, "dest": 0x1d4e, "turned": True},
-            {"src": 0x006b, "dest": 0x1d4f}, {"src": 0x006d, "dest": 0x1d50},
-            {"src": 0x014b, "dest": 0x1d51}, {"src": 0x006f, "dest": 0x1d52},
-            {"src": 0x0254, "dest": 0x1d53}, {"src": 0x1d16, "dest": 0x1d54},
-            {"src": 0x1d17, "dest": 0x1d55}, {"src": 0x0070, "dest": 0x1d56},
-            {"src": 0x0074, "dest": 0x1d57}, {"src": 0x0075, "dest": 0x1d58},
-            {"src": 0x1d1d, "dest": 0x1d59}, {"src": 0x026f, "dest": 0x1d5a},
-            {"src": 0x0076, "dest": 0x1d5b}, {"src": 0x1d25, "dest": 0x1d5c},
-            {"src": 0x03b2, "dest": 0x1d5d}, {"src": 0x03b3, "dest": 0x1d5e},
-            {"src": 0x03b4, "dest": 0x1d5f}, {"src": 0x03c6, "dest": 0x1d60},
-            {"src": 0x03c7, "dest": 0x1d61},
-            {"src": 0x0056, "dest": 0x2c7d}, {"src": 0x0068, "dest": 0x02b0},
-            {"src": 0x0266, "dest": 0x02b1}, {"src": 0x006a, "dest": 0x02b2},
-            {"src": 0x006c, "dest": 0x02e1}, {"src": 0x0073, "dest": 0x02e2},
-            {"src": 0x0078, "dest": 0x02e3}, {"src": 0x0072, "dest": 0x02b3},
-            {"src": 0x0077, "dest": 0x02b7}, {"src": 0x0079, "dest": 0x02b8},
-            {"src": 0x0063, "dest": 0x1d9c}, {"src": 0x0066, "dest": 0x1da0},
-            {"src": 0x007a, "dest": 0x1dbb}, {"src": 0x0061, "dest": 0x00aa},
-            {"src": 0x0252, "dest": 0x1d9b}, {"src": 0x0255, "dest": 0x1d9d},
-            {"src": 0x00f0, "dest": 0x1d9e}, {"src": 0x025c, "dest": 0x1d9f},
-            {"src": 0x025f, "dest": 0x1da1}, {"src": 0x0261, "dest": 0x1da2},
-            {"src": 0x0265, "dest": 0x1da3}, {"src": 0x0268, "dest": 0x1da4},
-            {"src": 0x0269, "dest": 0x1da5}, {"src": 0x026a, "dest": 0x1da6},
-            {"src": 0x1d7b, "dest": 0x1da7}, {"src": 0x029d, "dest": 0x1da8},
-            {"src": 0x026d, "dest": 0x1da9}, {"src": 0x1d85, "dest": 0x1daa},
-            {"src": 0x029f, "dest": 0x1dab}, {"src": 0x0271, "dest": 0x1dac},
-            {"src": 0x0270, "dest": 0x1dad}, {"src": 0x0272, "dest": 0x1dae},
-            {"src": 0x0273, "dest": 0x1daf}, {"src": 0x0274, "dest": 0x1db0},
-            {"src": 0x0275, "dest": 0x1db1}, {"src": 0x0278, "dest": 0x1db2},
-            {"src": 0x0282, "dest": 0x1db3}, {"src": 0x0283, "dest": 0x1db4},
-            {"src": 0x01ab, "dest": 0x1db5}, {"src": 0x0289, "dest": 0x1db6},
-            {"src": 0x028a, "dest": 0x1db7}, {"src": 0x1d1c, "dest": 0x1db8},
-            {"src": 0x028b, "dest": 0x1db9}, {"src": 0x028c, "dest": 0x1dba},
-            {"src": 0x0290, "dest": 0x1dbc}, {"src": 0x0291, "dest": 0x1dbd},
-            {"src": 0x0292, "dest": 0x1dbe}, {"src": 0x03b8, "dest": 0x1dbf},
-
-    ]
-    subscripts = [
-            {"src": 0x0069, "dest": 0x1d62}, {"src": 0x0072, "dest": 0x1d63},
-            {"src": 0x0075, "dest": 0x1d64}, {"src": 0x0076, "dest": 0x1d65},
-            {"src": 0x03b2, "dest": 0x1d66}, {"src": 0x03b3, "dest": 0x1d67},
-            {"src": 0x03c1, "dest": 0x1d68}, {"src": 0x03c6, "dest": 0x1d69},
-            {"src": 0x03c7, "dest": 0x1d6a}, {"src": 0x006a, "dest": 0x2c7c},
-            {"src": 0x0030, "dest": 0x2080}, {"src": 0x0031, "dest": 0x2081},
-            {"src": 0x0032, "dest": 0x2082}, {"src": 0x0033, "dest": 0x2083},
-            {"src": 0x0034, "dest": 0x2084}, {"src": 0x0035, "dest": 0x2085},
-            {"src": 0x0036, "dest": 0x2086}, {"src": 0x0037, "dest": 0x2087},
-            {"src": 0x0038, "dest": 0x2088}, {"src": 0x0039, "dest": 0x2089},
-            {"src": 0x002b, "dest": 0x208a}, {"src": 0x002d, "dest": 0x208b},
-            {"src": 0x003d, "dest": 0x208c}, {"src": 0x0028, "dest": 0x208d},
-            {"src": 0x0029, "dest": 0x208e}, {"src": 0x0061, "dest": 0x2090},
-            {"src": 0x0065, "dest": 0x2091}, {"src": 0x006f, "dest": 0x2092},
-            {"src": 0x0078, "dest": 0x2093}, {"src": 0x0259, "dest": 0x2094},
-            {"src": 0x0068, "dest": 0x2095}, {"src": 0x006b, "dest": 0x2096},
-            {"src": 0x006c, "dest": 0x2097}, {"src": 0x006d, "dest": 0x2098},
-            {"src": 0x006e, "dest": 0x2099}, {"src": 0x0070, "dest": 0x209a},
-            {"src": 0x0073, "dest": 0x209b}, {"src": 0x0074, "dest": 0x209c}
-    ]
-
-    for g in superscripts:
-        _f.selection.select(g["src"])
-        _f.copy()
-        _f.selection.select(g["dest"])
-        _f.paste()
-    for g in subscripts:
-        _f.selection.select(g["src"])
-        _f.copy()
-        _f.selection.select(g["dest"])
-        _f.paste()
-
-    for g in _f.glyphs("encoding"):
-        if g.encoding > 0x2c7d:
-            continue
-        elif in_scripts(g.encoding, superscripts):
-            if g.encoding == 0x1d5d or g.encoding == 0x1d61:
-                g.transform(psMat.scale(0.70, 0.70))
-            elif g.encoding == 0x1d3b:
-                g.transform(psMat.scale(0.75, 0.75))
-                g.transform(psMat.compose(psMat.scale(-1, 1), psMat.translate(g.width, 0)))
-            elif g.encoding == 0x1d4e:
-                g.transform(psMat.scale(0.75, 0.75))
-                g.transform(psMat.rotate(3.14159))
-                g.transform(psMat.translate(0, 512))
-            else:
-                g.transform(psMat.scale(0.75, 0.75))
-            bb = g.boundingBox()
-            g.transform(psMat.translate(0, 244))
-            align_to_center(g)
-        elif in_scripts(g.encoding, subscripts):
-            if g.encoding == 0x1d66 or g.encoding == 0x1d6a:
-                g.transform(psMat.scale(0.70, 0.70))
-            else:
-                g.transform(psMat.scale(0.75, 0.75))
-            bb = g.boundingBox()
-            y = -144
-            if bb[1] < -60: # DESCENT - 144
-                y = -60
-            g.transform(psMat.translate(0, y))
-            align_to_center(g)
-    return _f
-
-def in_scripts(encoding, scripts):
-    for s in scripts:
-        if encoding == s["dest"]:
-            return True
-    return False
-
-
-def scripts_from(encoding, scripts):
-    for s in scripts:
-        if encoding == s["dest"]:
-            return s["src"]
-    raise ValueError
-
 def main():
     print('')
-    print('### Generating Cica started. ###')
-    # check_files()
+    print('### Generating %s started. ###' % FAMILY)
 
-    for _f in fonts:
+    if len(sys.argv) > 1:
+        lst = [x for x in fonts if x["filename"] in sys.argv]
+    else:
+        lst = fonts
+
+    for _f in lst:
         build_font(_f, True)
-        build_font(_f, False)
+        #build_font(_f, False)
 
     print('### Succeeded ###')
 

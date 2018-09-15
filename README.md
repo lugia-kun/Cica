@@ -1,68 +1,29 @@
-(工事中)
-
-# プログラミング用日本語等幅フォント [TBD]
+# プログラミング用日本語等幅フォント Ocami
 
 ## ダウンロード
 
 ## 特徴
 
 * 以下のフォントを合成後に調整した、プログラミング向けの等幅日本語フォントです
-<!-- * 各種エディタで迷わずに設定できるフォント名にしました(ex. `Hoge Font`, `Hoge_Font` or `Hoge Font Regular`  ??? ARGGGG!!! )-->
-<!-- * tmuxの画面分割に対応しています -->
-<!-- * 非HiDPI（非Retina）のWindowsでも文字が欠けません -->
-* Ambiguous Width の設定を Narrow で使うことを前提としています
-
-フォントの大部分を占める「源ノ角ゴシック」が SIL OPEN FONT LICENSE 1.1 でライセンスされているため、SIL OPEN FONT LICENSE 1.1 以外でライセンスされたのフォントからのグリフは使用しないようにしています。
+  * 英数字・記号類に IBM Plex Mono
+  * ギリシャ文字・キリル文字に Fira Mono
+  * それ以外の文字に Source Han Sans (源ノ角ゴシック)
+* Ambiguous Width の設定を Narrow で使うことを想定しています
+  * Ambigious Width の設定は、Wide にできないこともあること、[OS標準のままだと必要なデータが無いことが多く](https://github.com/hamano/locale-eaw)、リモート等での使用に向かないため。
 
 ## バリエーション
 
-| ファイル名              | 説明     |
-| ----                    | ----     |
-| [TBD]-Regular.ttf       | 通常     |
-| [TBD]-RegularItalic.ttf | 斜体     |
-| [TBD]-Bold.ttf          | 太字     |
-| [TBD]-BoldItalic.ttf    | 太字斜体 |
+| ファイル名           | 説明     |
+| ----                 | ----     |
+| Ocami-Regular.ttf    | 通常     |
+| Ocami-Italic.ttf     | 斜体     |
+| Ocami-Bold.ttf       | 太字     |
+| Ocami-BoldItalic.ttf | 太字斜体 |
 
 
 ## ビルド手順
 
-2018-07-01時点、Ubuntu 16.04 にて
-
-```sh
-sudo apt-get update
-sudo apt-get -y install apt-file
-sudo apt-file update
-sudo apt-file search add-apt-repository
-sudo apt-get -y install software-properties-common
-sudo apt-get -y install fontforge unar
-git clone git@github.com:miiton/Cica.git
-wget -O ubuntu-font-family-0.83.zip https://assets.ubuntu.com/v1/fad7939b-ubuntu-font-family-0.83.zip
-unar ubuntu-font-family-0.83.zip
-cp ubuntu-font-family-0.83/UbuntuMono-R.ttf ./sourceFonts/
-cp ubuntu-font-family-0.83/UbuntuMono-B.ttf ./sourceFonts/
-wget https://osdn.jp/downloads/users/8/8598/rounded-mgenplus-20150602.7z
-unar rounded-mgenplus-20150602.7z
-cp rounded-mgenplus-20150602/rounded-mgenplus-1m-regular.ttf ./sourceFonts
-cp rounded-mgenplus-20150602/rounded-mgenplus-1m-bold.ttf ./sourceFonts
-wget https://github.com/googlei18n/noto-emoji/raw/master/fonts/NotoEmoji-Regular.ttf -O sourceFonts/NotoEmoji-Regular.ttf
-curl -LO http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.zip
-unar dejavu-fonts-ttf-2.37.zip
-mv dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono.ttf ./sourceFonts/
-mv dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono-Bold.ttf ./sourceFonts/
-fontforge -lang=py -script cica.py
-```
-
-[fontforge のバージョンが古いと正常に動作しません #6](https://github.com/miiton/Cica/issues/6)
-
-```
-% fontforge --version
-
-Copyright (c) 2000-2012 by George Williams.
- Executable based on sources from 14:57 GMT 31-Jul-2012-ML.
- Library based on sources from 14:57 GMT 31-Jul-2012.
-fontforge 20120731
-libfontforge 20120731-ML
-```
+ビルドには、最新の fontforge が必要（手元では [e688b8c](https://github.com/fontforge/fontforge/commit/e688b8c4dc634dcc128709f84b98f2407294f3fb) を使用）で、かつ[パッチ](https://github.com/fontforge/fontforge/issues/3300)を当てる必要があります。
 
 # ライセンス
 
@@ -74,10 +35,25 @@ libfontforge 20120731-ML
 
 * 以下のグリフは自作です。これらのグリフのソース形態（つまり、SVG ファイル）は、CC0 1.0 Universal で提供（著作権を放棄）します。[src/COPYING](src/COPYING)
 
-  - (まだない)
+  - U+3000
+
+# TODO
+
+* tmuxの画面分割
+* 非HiDPI（非Retina）のWindows (作者はなぜ確認が必要なのかわかっていません)
+* Powerline シンボルの作成
+  * OFL でバンドル出来るライセンスになっていないため。
+* 罫線文字の修正
+* 記号の半角化
+  * macOS の Homebrew が使う絵文字のように、フォントが全角幅でデザインされていながらカーソルが半角分しか進まないことをすでに想定していると考えられるものは全角のままとします（が、端末によっては表示が切れたりします）。
+  * Emacs (GTK) などのようにフォントの幅をそのまま使われるときに、全角のほうが都合が良い文字も全角のままにする・・・と思います。
+  * 数学記号は全角である意味が無いので、半角化すると思います。
 
 # 謝辞
 
-[TBD] フォントの合成にあたり素晴らしいフォントを提供してくださっている製作者の方々に感謝いたします。
+Ocami フォントの合成にあたり素晴らしいフォントを提供してくださっている製作者の方々に感謝いたします。
 
-- 源の角ゴシック : [adobe\-fonts/source\-han\-sans: Source Han Sans \| 思源黑体 \| 思源黑體 \| 源ノ角ゴシック \| 본고딕](https://github.com/adobe-fonts/source-han-sans)
+- 源ノ角ゴシック : [adobe\-fonts/source\-han\-sans: Source Han Sans \| 思源黑体 \| 思源黑體 \| 源ノ角ゴシック \| 본고딕](https://github.com/adobe-fonts/source-han-sans)
+- IBM Plex Mono : [Introduction \| IBM Plex](https://www.ibm.com/plex/)
+- Fira Mono : [Fira Sans](https://mozilla.github.io/Fira/)
+

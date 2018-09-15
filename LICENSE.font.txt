@@ -1,12 +1,14 @@
-Copyright (c) 2018, Hajime Yoshimori (lugia.kun at gmail.com),
-with Reserved Font Name <Reserved Font Name>.
+Copyright (c) 2018, Hajime Yoshimori (lugia.kun at gmail.com)
+with Reserved Font Name [TBD].
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
 
-This license is copied below, and is also available with a FAQ at: https://scripts.sil.org/OFL
 
-SIL OPEN FONT LICENSE
-Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
 
 PREAMBLE
 The goals of the Open Font License (OFL) are to stimulate worldwide
@@ -36,7 +38,7 @@ copyright statement(s).
 distributed by the Copyright Holder(s).
 
 "Modified Version" refers to any derivative made by adding to, deleting,
-or substituting — in part or in whole — any of the components of the
+or substituting -- in part or in whole -- any of the components of the
 Original Version, by changing formats or by porting the Font Software to a
 new environment.
 
@@ -90,4 +92,3 @@ INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
-
