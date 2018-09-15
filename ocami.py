@@ -320,6 +320,7 @@ def add_source_han_sans(target, source, italic):
         {"src":  1676, "dest": 0x3127, "copy": False, "dup":   None},
         {"src": 65353, "dest": "Identity.65353", "copy": False, "dup": 0x3127},
 
+        {"src":  1417, "dest":  0x301C, "copy": True, "dup":  0xff5e}, # 〜
         {"src":  2877, "dest":  0x3588, "copy": True, "dup":  0x439b}, # 㖈
         {"src":  3084, "dest":  0x363d, "copy": True, "dup":  0x39b3}, # 㘽
         {"src": 11367, "dest":  0x51a4, "copy": True, "dup": 0x2f818}, # 冤
