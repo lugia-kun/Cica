@@ -123,8 +123,8 @@ fonts = [
         'src_fonts': {
             'ibm_plex': 'IBMPlexMono-Regular.ttf',
             'fira_mono': 'FiraMono-Regular.ttf',
-            'anonymous_pro': 'AnonymousPro-Regular.ttf',
             'source_han_sans': 'SourceHanSans-Regular.otf',
+            'source_han_sans_subset': 'SourceHanSansJP-Regular.otf',
         },
         'italic': False,
     }, {
@@ -137,8 +137,8 @@ fonts = [
         'src_fonts': {
             'ibm_plex': 'IBMPlexMono-Italic.ttf',
             'fira_mono': 'FiraMono-Regular.ttf',
-            'anonymous_pro': 'AnonymousPro-Italic.ttf',
             'source_han_sans': 'SourceHanSans-Regular.otf',
+            'source_han_sans_subset': 'SourceHanSansJP-Regular.otf',
         },
         'italic': True,
     }, {
@@ -151,8 +151,8 @@ fonts = [
         'src_fonts': {
             'ibm_plex': 'IBMPlexMono-Bold.ttf',
             'fira_mono': 'FiraMono-Bold.ttf',
-            'anonymous_pro': 'AnonymousPro-Bold.ttf',
             'source_han_sans': 'SourceHanSans-Bold.otf',
+            'source_han_sans_subset': 'SourceHanSansJP-Bold.otf',
         },
         'italic': False,
     }, {
@@ -165,8 +165,8 @@ fonts = [
         'src_fonts': {
             'ibm_plex': 'IBMPlexMono-BoldItalic.ttf',
             'fira_mono': 'FiraMono-Bold.ttf',
-            'anonymous_pro': 'AnonymousPro-BoldItalic.ttf',
             'source_han_sans': 'SourceHanSans-Bold.otf',
+            'source_han_sans_subset': 'SourceHanSansJP-Bold.otf',
         },
         'italic': True,
     }
@@ -634,7 +634,6 @@ def add_source_han_sans(target, source, italic):
         except:
             log("%s: .. %d (0x%04x) does not found" %
                 (srcfont.fontname, h["src"], h["src"]))
-            flg = True
             continue
 
         if type(h["dest"]) is int:
@@ -987,7 +986,7 @@ def add_own_symbols(target):
         g.transform(psMat.scale(scale,scale))
 
 
-def build_font(_f, emoji):
+def build_font(_f, source_han_subset):
     log('Generating %s ...' % _f.get('weight_name'))
     sources = _f.get("src_fonts")
     for k in sources:
@@ -1003,7 +1002,12 @@ def build_font(_f, emoji):
     build.ascent = ASCENT
     build.descent = DESCENT
 
-    add_source_han_sans(build, sources["source_han_sans"], _f["italic"])
+    if source_han_subset:
+        source_han = sources["source_han_sans_subset"]
+    else:
+        source_han = sources["source_han_sans"]
+
+    add_source_han_sans(build, source_han, _f["italic"])
     add_ibm_plex_or_fira_mono(build, sources["ibm_plex"], False,
                               [
                                   (0x0020,0x007e), # Latin
@@ -1108,17 +1112,31 @@ def build_font(_f, emoji):
     build.close()
 
 def main():
-    print('')
-    print('### Generating %s started. ###' % FAMILY)
+    args = sys.argv
+    arg0 = args.pop(0)
+    use_subset = False
+    for m in args:
+        if m == "-help" or m == "--help" or m == "-h":
+            print("""
+   fontforge -lang=py %s [Font File Names to generate]
+
+   --help           Show this help
+   --use-subset     Use subset Source Han Sans
+            """ % arg0)
+            exit(0)
+        if m == "--use-subset":
+            use_subset = True
 
     if len(sys.argv) > 1:
         lst = [x for x in fonts if x["filename"] in sys.argv]
     else:
         lst = fonts
 
+    print('')
+    print('### Generating %s started. ###' % FAMILY)
+
     for _f in lst:
-        build_font(_f, True)
-        #build_font(_f, False)
+        build_font(_f, use_subset)
 
     print('### Succeeded ###')
 
