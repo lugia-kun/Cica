@@ -39,7 +39,7 @@
 
 # TODO
 
-* tmuxの画面分割
+* ~~tmuxの画面分割~~
 * 非HiDPI（非Retina）のWindows (作者はなぜ確認が必要なのかわかっていません)
 * Powerline シンボルの作成
   * OFL でバンドル出来るライセンスになっていないため。
