@@ -213,28 +213,39 @@ def set_os2_values(_font, _info):
     _font.os2_panose = (2, 11, int(weight / 100), 9, 2, 2, 3, 2, 2, 7)
     return _font
 
+def get_SFNTtag(font, name, lang = "English (US)"):
+    m = font.sfnt_names
+    h = {}
+    for x in m:
+        if x[1] != name: continue
+        h[x[0]] = x[2]
+
+    data = h.get(lang)
+    if data is None:
+        data = h.get(0x409)
+
+    return data
+
+def merge_SFNT(srcfont, target, name, lang = "English (US)"):
+    src = get_SFNTtag(srcfont, name, lang)
+    tgt = get_SFNTtag(target, name, lang)
+
+    if src:
+        if tgt is None:
+            tgt = ""
+        elif len(tgt) > 0:
+            if tgt[-1] != "\n":
+               tgt += "\n"
+            tgt += "\n"
+        tgt += "[%s]\n%s" % (srcfont.fontname, src)
+
+        target.appendSFNTName(0x409, name, tgt)
+
 def merge_designer(srcfont, target):
-    m = srcfont.sfnt_names
-    try:
-        designer_src = [x for x in m if x[1] == "Designer"].pop(0)[2]
-    except:
-        designer_src = None
+    merge_SFNT(srcfont, target, "Designer")
 
-    m = target.sfnt_names
-    try:
-        designer_tgt = [x for x in m if x[1] == "Designer"].pop(0)[2]
-    except:
-        designer_tgt = ""
-
-    if designer_src:
-        if len(designer_tgt) > 0:
-            if designer_tgt[-1] != "\n":
-                designer_tgt += "\n"
-            designer_tgt += "\n"
-        designer_tgt += "[%s]\n%s" % (srcfont.fontname, designer_src)
-
-        target.appendSFNTName(0x409, "Designer", designer_tgt)
-
+def merge_copyright(srcfont, target):
+    merge_SFNT(srcfont, target, "Copyright")
 
 def add_source_han_sans(target, source, italic):
     log("Reading %s..." % source["path"])
@@ -308,7 +319,6 @@ def add_source_han_sans(target, source, italic):
         copy_map_reverse[enc] = x
         l = umap.readline()
     umap.close()
-    print(copy_map_reverse)
 
     log("%s: Collecting informations of glyphs..." % (srcfont.fontname))
     lookup_remaps = {}
@@ -546,6 +556,7 @@ def add_source_han_sans(target, source, italic):
                 exit(1)
 
     merge_designer(srcfont, target)
+    merge_copyright(srcfont, target)
     srcfont.close()
 
     # Both IBM Plex and Fira Mono uses 600 width in 1000 em.
@@ -625,6 +636,7 @@ def add_ibm_plex_or_fira_mono(target, source, slant, ranges):
     target.paste()
 
     merge_designer(srcfont, target)
+    merge_copyright(srcfont, target)
     srcfont.close()
 
 def add_own_symbols(target):
@@ -728,6 +740,7 @@ def check_font(target):
 
 def build_font(_f, source_han_subset):
     log('Generating %s ...' % _f.get('weight_name'))
+
     sources = _f.get("src_fonts")
     for k in sources:
         val = sources.get(k)
@@ -741,6 +754,10 @@ def build_font(_f, source_han_subset):
     build.encoding = "UnicodeFull"
     build.ascent = ASCENT
     build.descent = DESCENT
+
+    # Clear copyright field (new font has been set copyright from username)
+    build.appendSFNTName(0x409, 0, "")
+    build.appendSFNTName(0x411, 0, "")
 
     if source_han_subset:
         source_han = sources["source_han_sans_subset"]
@@ -816,25 +833,34 @@ def build_font(_f, source_han_subset):
         "Variations PostScript Prefix": 25
     }
 
-    build.appendSFNTName(0x411,0, COPYRIGHT)
-    build.appendSFNTName(0x411,1, _f.get('family'))
-    build.appendSFNTName(0x411,2, _f.get('style_name'))
+    cpl = get_SFNTtag(build, "Copyright")
+    lic = re.sub(r"@@.*@@", cpl, LICENSE)
+
+    cpl = COPYRIGHT + "\n" + cpl
+
+    fp = open("dist/OFL.txt", "w")
+    fp.write(lic)
+    fp.close()
+
+    # build.appendSFNTName(0x411,0, COPYRIGHT)
+    # build.appendSFNTName(0x411,1, _f.get('family'))
+    # build.appendSFNTName(0x411,2, _f.get('style_name'))
     # build.appendSFNTName(0x411,3, "")
-    build.appendSFNTName(0x411,4, _f.get('name'))
-    build.appendSFNTName(0x411,5, "Version " + VERSION)
-    build.appendSFNTName(0x411,6, _f.get('family') + "-" + _f.get('weight_name'))
+    # build.appendSFNTName(0x411,4, _f.get('name'))
+    # build.appendSFNTName(0x411,5, "Version " + VERSION)
+    # build.appendSFNTName(0x411,6, _f.get('family') + "-" + _f.get('weight_name'))
     # build.appendSFNTName(0x411,7, "")
     # build.appendSFNTName(0x411,8, "")
     # build.appendSFNTName(0x411,9, "")
     # build.appendSFNTName(0x411,10, "")
     # build.appendSFNTName(0x411,11, "")
     # build.appendSFNTName(0x411,12, "")
-    build.appendSFNTName(0x411,13, LICENSE)
-    build.appendSFNTName(0x411,14, LICENSE_URL)
+    # build.appendSFNTName(0x411,13, LICENSE)
+    # build.appendSFNTName(0x411,14, LICENSE_URL)
     # build.appendSFNTName(0x411,15, "")
     # build.appendSFNTName(0x411,16, _f.get('family'))
     # build.appendSFNTName(0x411,17, _f.get('style_name'))
-    build.appendSFNTName(0x409,0, COPYRIGHT)
+    build.appendSFNTName(0x409,0, cpl)
     build.appendSFNTName(0x409,1, _f.get('family'))
     build.appendSFNTName(0x409,2, _f.get('style_name'))
     build.appendSFNTName(0x409,3, VERSION + ";" + _f.get('family') + "-" + _f.get('style_name'))
@@ -847,7 +873,7 @@ def build_font(_f, source_han_subset):
     # build.appendSFNTName(0x409,10, "")
     # build.appendSFNTName(0x409,11, "")
     # build.appendSFNTName(0x409,12, "")
-    build.appendSFNTName(0x409,13, LICENSE)
+    build.appendSFNTName(0x409,13, lic)
     build.appendSFNTName(0x409,14, LICENSE_URL)
     # build.appendSFNTName(0x409,15, "")
     # build.appendSFNTName(0x409,16, _f.get('family'))

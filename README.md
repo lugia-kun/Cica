@@ -32,10 +32,10 @@
 
 * 生成スクリプトを用いて生成されたフォントは、SIL OPEN FONT LICENSE 1.1 の元で使用許諾されます。
   - See [LICENSE.font.txt](LICENSE.font.txt)
+  - このファイルにはソースフォントの著作権表示は含まないため、実際のフォントの著作権表示とは異なります。
 
-* 以下のグリフは自作です。これらのグリフのソース形態（つまり、SVG ファイル）は、CC0 1.0 Universal で提供（著作権を放棄）します。[src/COPYING](src/COPYING)
-
-  - U+3000
+* [src](src/) ディレクトリ以下のグリフは自作です。これらのグリフのソース形態（つまり、SVG ファイル）は、CC0 1.0 Universal で提供（著作権を放棄）します。フォントにかかわらずご自由にお使いいただけます。
+  - See [src/COPYING](src/COPYING)
 
 # TODO
 
