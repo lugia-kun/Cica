@@ -838,7 +838,7 @@ def build_font(_f, source_han_subset):
 
     cpl = COPYRIGHT + "\n" + cpl
 
-    fp = open("dist/OFL.txt", "w")
+    fp = open("dist/OFL.txt", "w", encoding = "utf-8")
     fp.write(lic)
     fp.close()
 
