@@ -15,7 +15,7 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 5c3e80d, 2017-08-06"
-   sodipodi:docname="uniXXXX-box-template-f.svg">
+   sodipodi:docname="uniXXXX-box-template.svg">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -26,10 +26,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.30566406"
-     inkscape:cx="512.46584"
-     inkscape:cy="1024.8766"
+     inkscape:cx="512"
+     inkscape:cy="1024"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="svg8"
      showgrid="false"
      units="px"
      showguides="true"
@@ -361,7 +361,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
         <cc:license
            rdf:resource="http://creativecommons.org/publicdomain/zero/1.0/" />
         <dc:description>このファイルはガイドラインでテンプレートを作成しています。ガイドラインを表示するには、Inkscape などの sodipodi 名前空間を解釈できる SVG エディタが必要です。
