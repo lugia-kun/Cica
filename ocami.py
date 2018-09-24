@@ -863,7 +863,7 @@ def build_font(_f, source_han_subset):
     build.appendSFNTName(0x409,0, cpl)
     build.appendSFNTName(0x409,1, _f.get('family'))
     build.appendSFNTName(0x409,2, _f.get('style_name'))
-    build.appendSFNTName(0x409,3, VERSION + ";" + _f.get('family') + "-" + _f.get('style_name'))
+    build.appendSFNTName(0x409,3, VERSION + ";misc;" + _f.get('family') + "-" + _f.get('style_name'))
     build.appendSFNTName(0x409,4, _f.get('name'))
     build.appendSFNTName(0x409,5, "Version " + VERSION)
     build.appendSFNTName(0x409,6, _f.get('name'))
