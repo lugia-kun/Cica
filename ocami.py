@@ -247,6 +247,15 @@ def merge_designer(srcfont, target):
 def merge_copyright(srcfont, target):
     merge_SFNT(srcfont, target, "Copyright")
 
+def _(uni_or_glyphname):
+    if type(uni_or_glyphname) is int:
+        if uni_or_glyphname > 0xffff:
+            return "U+%06X" % uni_or_glyphname
+        else:
+            return "U+%04X" % uni_or_glyphname
+    else:
+        return "'%s'" % uni_or_glyphname
+
 def add_source_han_sans(target, source, italic):
     log("Reading %s..." % source["path"])
     srcfont = fontforge.open(source["path"])
@@ -344,12 +353,20 @@ def add_source_han_sans(target, source, italic):
                 continue
 
             liga = False
+            locl = False
             for t in feat:
                 if t[0] == "liga":
                     liga = True
                     break
+                if t[0] == "locl":
+                    locl = True
+                    break
             if liga:
                 log("%s: .. Skipped standard liga (because mintty applies)" %
+                    (srcfont.fontname))
+                continue
+            if locl:
+                log("%s: .. Skipped local form (have no much meaning)" %
                     (srcfont.fontname))
                 continue
 
@@ -392,8 +409,10 @@ def add_source_han_sans(target, source, italic):
         subtmap = subtable_data[subtname]
         for base in subtmap:
             data = subtmap[base]
-            for i in range(0,len(data)):
-                name = data[i]
+            x = data.copy()
+            x.append(base)
+            for i in range(0,len(x)):
+                name = x[i]
                 if type(name) is str:
                     try:
                         g = srcfont[name]
@@ -401,27 +420,61 @@ def add_source_han_sans(target, source, italic):
                         if uni is None:
                             not_in_unicode[g.encoding] = True
                         else:
-                            data[i] = uni
+                            data[i] = uni[0]
                     except TypeError:
                         flg = True
                         log("%s: .. %s does not found" %
                             (srcfont.fontname, nane))
 
+    if flg:
+        exit(1)
+
+    fp = open("ocami-subt.log", "w")
+    for subtname in subtable_data:
+        subtmap = subtable_data.get(subtname)
+        if subtmap is None: continue
+        print("%s:" % subtname, file = fp)
+        for base in subtmap:
+            s = "  %s: " % _(base)
+            x = None
+            data = subtmap[base]
+            for i in range(0,len(data)):
+                gid = data[i]
+                if x is None:
+                    x = ""
+                else:
+                    x += ", "
+                x = "%s" % _(gid)
+            if not x is None:
+                s += "[" + x + "]"
+            print(s, file = fp)
+    fp.close()
+
     log("%s: Creating glyphs for substitutions/ligatures..." %
         (srcfont.fontname))
     tgfst = None
     tglst = None
+    lenc = None
     srcfont.selection.none()
     for enc in not_in_unicode:
         if not not_in_unicode[enc]: continue
+        if not lenc is None and lenc > enc:
+            srcfont.copy()
+            target.selection.select(("ranges",),tgfst,tglst)
+            target.paste()
+            srcfont.selection.none()
+            tgfst = None
+            tglst = None
+
         g = srcfont[enc]
         nam = g.glyphname
         gu = target.createChar(-1,nam)
         uni = gu.encoding
         if tgfst is None: tgfst = uni
         tglst = uni
-        #log("%s: .. Creating U+%x for %s" % (srcfont.fontname, uni, nam))
+        log("%s: .. Creating U+%x for %s" % (srcfont.fontname, uni, nam))
         srcfont.selection.select(("more",),enc)
+        lenc = enc
 
     log("%s: Copying glyphs..." % (srcfont.fontname))
     srcfont.copy()
@@ -457,7 +510,7 @@ def add_source_han_sans(target, source, italic):
         lenc = enc
         luni = uni
         srcfont.selection.select(("more",),enc)
-        target.selection.select(("more",),uni)
+        target.selection.select(("more","unicode"),uni)
         n = n + 1
 
     if n > 0:
@@ -505,46 +558,26 @@ def add_source_han_sans(target, source, italic):
                 for x in l:
                     unilst.append((x,uni))
 
-        for uni in unilst:
-            tabuni = uni[1]
-            uni = uni[0]
-
+        for uni in tabsrc:
             g = None
             try:
                 g = target[uni]
             except:
-                "NOP"
-
-            if g is None and type(uni) is str:
-                gs = srcfont[uni]
-                altuni = gs.altuni
-                if not altuni is None:
-                    for enc in altuni:
-                        try:
-                            g = target[enc[0]]
-                            break
-                        except:
-                            "NOP"
-
-                    if not g is None:
-                        log("%s: .. U+%04x will be used instead of %s" %
-                            (srcfont.fontname, g.unicode, uni))
-
-            if g is None:
-                if type(uni) is int:
-                    uni = "U+%04x" % uni
-                log("%s: .. %s were not copied." % (srcfont.fontname, uni))
+                log("%s: .. %s were not copied" % (srcfont.fontname, _(uni)))
                 continue
 
-            lst = tabsrc[tabuni]
+            lst = tabsrc[uni]
             alst = []
+            inf = None
             for li in lst:
-                if type(li) is str:
-                    li = [li]
+                gx = target[li]
+                alst.append(gx.glyphname)
+                if inf is None:
+                    inf = _(li)
+                else:
+                    inf += ", " + _(li)
 
-                for i in li:
-                    gx = target[i]
-                    alst.append(gx.glyphname)
+            log("%s: sub %s -> [%s]" % (srcfont.fontname, _(uni), inf))
 
             if subttype == "gsub_single":
                 g.addPosSub(subtname, alst[0])
@@ -842,6 +875,12 @@ def build_font(_f, source_han_subset):
     fp.write(lic)
     fp.close()
 
+    x = VERSION.split(".")
+    x = [int(x[0], 16), int(x[1], 16), int(x[2], 16)]
+    isft_rev = (x[0] << 16) | (x[1] << 8) | x[2]
+    sfnt_revision = "%x.%04x" % (isft_rev >> 16, isft_rev & 0xffff)
+    # build.sfntRevision = isft_rev
+
     # build.appendSFNTName(0x411,0, COPYRIGHT)
     # build.appendSFNTName(0x411,1, _f.get('family'))
     # build.appendSFNTName(0x411,2, _f.get('style_name'))
@@ -863,7 +902,7 @@ def build_font(_f, source_han_subset):
     build.appendSFNTName(0x409,0, cpl)
     build.appendSFNTName(0x409,1, _f.get('family'))
     build.appendSFNTName(0x409,2, _f.get('style_name'))
-    build.appendSFNTName(0x409,3, VERSION + ";misc;" + _f.get('family') + "-" + _f.get('style_name'))
+    build.appendSFNTName(0x409,3, sfnt_revision + ";misc;" + _f.get('family') + "-" + _f.get('style_name'))
     build.appendSFNTName(0x409,4, _f.get('name'))
     build.appendSFNTName(0x409,5, "Version " + VERSION)
     build.appendSFNTName(0x409,6, _f.get('name'))
@@ -884,6 +923,7 @@ def build_font(_f, source_han_subset):
     fontpath = "dist/%s" % _f.get("filename")
     log("Writing %s..." % fontpath)
     build.generate(fontpath)
+    # build.save(fontpath + ".sfd")
     build.close()
 
 def main():
@@ -902,7 +942,7 @@ def main():
         if m == "--use-subset":
             use_subset = True
 
-    if len(sys.argv) > 1:
+    if len(args) > 0:
         lst = [x for x in fonts if x["filename"] in sys.argv]
     else:
         lst = fonts
