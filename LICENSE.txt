@@ -5,10 +5,9 @@
 * Generated font is licensed under SIL OPEN FONT LICENSE 1.1
   - See [LICENSE.font.txt]
 
-* The following glyphs are original work. The source form of the these
-  glyphs (i.e., SVG data file) are CC0. See [src/COPYING].
-
-  - (not yet)
+* The glyphs in [src](src/) subdirectory are original work. The source
+  form of the these glyphs (i.e., SVG data file) are CC0.
+  - See [src/COPYING]
 
   Note that the generated fonts are licensed under OFL (and
   copyrighted). This means your derived font software must be licensed

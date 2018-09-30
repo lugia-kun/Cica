@@ -29,7 +29,7 @@ SOURCE = './sourceFonts'
 LICENSE = open('./LICENSE.font.txt').read()
 LICENSE_URL = "http://scripts.sil.org/OFL"
 COPYRIGHT = open('./COPYRIGHT.txt').read()
-VERSION = '0.2.0'
+VERSION = '0.3.0'
 FAMILY = 'Ocami'
 ITALIC_ANGLE = -9
 ITALIC_SKEW = psMat.skew(-ITALIC_ANGLE / 180.0 * math.pi)
@@ -246,6 +246,12 @@ def merge_designer(srcfont, target):
 
 def merge_copyright(srcfont, target):
     merge_SFNT(srcfont, target, "Copyright")
+
+def merge_description(srcfont, target):
+    merge_SFNT(srcfont, target, "Descriptor")
+
+def merge_trademark(srcfont, target):
+    merge_SFNT(srcfont, target, "Trademark")
 
 def _(uni_or_glyphname):
     if type(uni_or_glyphname) is int:
@@ -590,6 +596,8 @@ def add_source_han_sans(target, source, italic):
 
     merge_designer(srcfont, target)
     merge_copyright(srcfont, target)
+    merge_trademark(srcfont, target)
+    merge_description(srcfont, target)
     srcfont.close()
 
     # Both IBM Plex and Fira Mono uses 600 width in 1000 em.
@@ -670,6 +678,8 @@ def add_ibm_plex_or_fira_mono(target, source, slant, ranges):
 
     merge_designer(srcfont, target)
     merge_copyright(srcfont, target)
+    merge_trademark(srcfont, target)
+    merge_description(srcfont, target)
     srcfont.close()
 
 def add_own_symbols(target):
@@ -875,12 +885,6 @@ def build_font(_f, source_han_subset):
     fp.write(lic)
     fp.close()
 
-    x = VERSION.split(".")
-    x = [int(x[0], 16), int(x[1], 16), int(x[2], 16)]
-    isft_rev = (x[0] << 16) | (x[1] << 8) | x[2]
-    sfnt_revision = "%x.%04x" % (isft_rev >> 16, isft_rev & 0xffff)
-    # build.sfntRevision = isft_rev
-
     # build.appendSFNTName(0x411,0, COPYRIGHT)
     # build.appendSFNTName(0x411,1, _f.get('family'))
     # build.appendSFNTName(0x411,2, _f.get('style_name'))
@@ -902,7 +906,7 @@ def build_font(_f, source_han_subset):
     build.appendSFNTName(0x409,0, cpl)
     build.appendSFNTName(0x409,1, _f.get('family'))
     build.appendSFNTName(0x409,2, _f.get('style_name'))
-    build.appendSFNTName(0x409,3, sfnt_revision + ";misc;" + _f.get('family') + "-" + _f.get('style_name'))
+    build.appendSFNTName(0x409,3, VERSION + ";misc;" + _f.get('family') + "-" + _f.get('style_name'))
     build.appendSFNTName(0x409,4, _f.get('name'))
     build.appendSFNTName(0x409,5, "Version " + VERSION)
     build.appendSFNTName(0x409,6, _f.get('name'))

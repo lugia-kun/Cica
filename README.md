@@ -23,7 +23,11 @@
 
 ## ビルド手順
 
-ビルドには、最新の fontforge が必要（手元では [e688b8c](https://github.com/fontforge/fontforge/commit/e688b8c4dc634dcc128709f84b98f2407294f3fb) を使用）で、かつ[パッチ](https://github.com/fontforge/fontforge/issues/3300)を当てる必要があります。
+現時点 (2018/09/30) では、Ocami フォントをビルドできる Fontforge はリリースされていません。ビルドには、Fontforge に[パッチ](https://github.com/fontforge/fontforge/issues/3300)を当てる必要があります。
+
+Fontforge をビルドするとき、必ず Python 3 が使用されるようにして下さい。Python 2 では動きません。
+
+詳しくは [Dockerfile](Dockerfile) と [entrypoint.sh](entrypoint.sh) を参照してください。
 
 # ライセンス
 
@@ -43,7 +47,7 @@
 * 非HiDPI（非Retina）のWindows (作者はなぜ確認が必要なのかわかっていません)
 * ~~Powerline シンボルの作成~~
   * OFL でバンドル出来るライセンスになっていないため。
-* 罫線文字の修正
+* ~~罫線文字の修正~~
 * 記号の半角化
   * macOS の Homebrew が使う絵文字のように、フォントが全角幅でデザインされていながらカーソルが半角分しか進まないことをすでに想定していると考えられるものは全角のままとします（が、端末によっては表示が切れたりします）。
   * Emacs (GTK) などのようにフォントの幅をそのまま使われるときに、全角のほうが都合が良い文字も全角のままにする・・・と思います。
