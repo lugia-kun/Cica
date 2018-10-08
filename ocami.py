@@ -464,7 +464,7 @@ def add_source_han_sans(target, source, italic):
     srcfont.selection.none()
     for enc in not_in_unicode:
         if not not_in_unicode[enc]: continue
-        if not lenc is None and lenc > enc:
+        if not lenc is None and lenc >= enc:
             srcfont.copy()
             target.selection.select(("ranges",),tgfst,tglst)
             target.paste()
@@ -502,7 +502,7 @@ def add_source_han_sans(target, source, italic):
             continue
 
         if lenc:
-            if lenc > enc or luni > uni:
+            if lenc >= enc or luni >= uni:
                 lenc = None
                 luni = None
                 srcfont.copy()
