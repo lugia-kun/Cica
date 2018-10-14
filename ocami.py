@@ -9,14 +9,14 @@ import sys
 import math
 import glob
 from xml.dom import minidom
-from logging import getLogger, StreamHandler, Formatter, DEBUG
+from logging import getLogger, StreamHandler, Formatter, INFO
 
 logger = getLogger(__name__)
 handler = StreamHandler()
-handler.setLevel(DEBUG)
-formatter = Formatter('%(asctime)s [%(levelname)s]: %(message)s')
+handler.setLevel(INFO)
+formatter = Formatter('[%(levelname)s]: %(message)s')
 handler.setFormatter(formatter)
-logger.setLevel(DEBUG)
+logger.setLevel(INFO)
 logger.addHandler(handler)
 
 # ASCENT = 850
@@ -173,7 +173,7 @@ fonts = [
 ]
 
 def log(str):
-    logger.debug(str)
+    logger.info(str)
 
 def set_os2_values(_font, _info):
     weight = _info.get('weight')
