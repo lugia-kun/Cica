@@ -781,7 +781,7 @@ def check_font(target):
 
 
 
-def build_font(_f, source_han_subset):
+def build_font(_f, source_han_subset, save_sfd):
     log('Generating %s ...' % _f.get('weight_name'))
 
     sources = _f.get("src_fonts")
@@ -927,24 +927,72 @@ def build_font(_f, source_han_subset):
     fontpath = "dist/%s" % _f.get("filename")
     log("Writing %s..." % fontpath)
     build.generate(fontpath)
-    # build.save(fontpath + ".sfd")
+    if save_sfd:
+        build.save(fontpath + ".sfd")
+    build.close()
+
+def build_svg_only():
+    build = fontforge.font()
+    build.encoding = "UnicodeBMP"
+    build.ascent = ASCENT
+    build.descent = DESCENT
+
+    add_own_symbols(build)
+
+    licf = open("src/COPYING")
+    lic = licf.read()
+    licf.close()
+
+    build.appendSFNTName(0x409, 0, "No Copyright")
+    build.appendSFNTName(0x409, 1, "Ocami PD")
+    build.appendSFNTName(0x409, 2, "Regular")
+    build.appendSFNTName(0x409, 4, "Ocami PD Regular")
+    build.appendSFNTName(0x409, 6, "Ocami PD Regular")
+    build.appendSFNTName(0x409,13, lic)
+
+    build.save("dist/ocami-symbols.sfd")
     build.close()
 
 def main():
     args = sys.argv
     arg0 = args.pop(0)
     use_subset = False
-    for m in args:
+    save_sfd = False
+
+    i = 0
+    while i < len(args):
+        arg = False
+        m = args[i]
         if m == "-help" or m == "--help" or m == "-h":
             print("""
    fontforge -lang=py %s [Font File Names to generate]
 
    --help           Show this help
    --use-subset     Use subset Source Han Sans
+   --save-sfd       Save SFD file (for debug)
+   --create-sfd-from-svg Create SFD file from Source SVG files.
             """ % arg0)
             exit(0)
+
         if m == "--use-subset":
             use_subset = True
+            arg = True
+        if m == "--save-sfd":
+            save_sfd = True
+            arg = True
+        if m == "--create-sfd-from-svg":
+            build_svg_only()
+            exit(0)
+        if m == "--":
+            arg.pop(i)
+            break
+        if re.match(r"^--", m):
+            raise TypeError("Invalid argument %s" % m)
+        if arg:
+            arg.pop(i)
+            continue
+        else:
+            i += 1
 
     if len(args) > 0:
         lst = [x for x in fonts if x["filename"] in sys.argv]
@@ -955,7 +1003,7 @@ def main():
     print('### Generating %s started. ###' % FAMILY)
 
     for _f in lst:
-        build_font(_f, use_subset)
+        build_font(_f, use_subset, save_sfd)
 
     print('### Succeeded ###')
 
