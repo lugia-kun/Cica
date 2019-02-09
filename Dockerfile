@@ -10,8 +10,7 @@ WORKDIR /work
 RUN git clone https://github.com/fontforge/fontforge.git
 
 WORKDIR /work/fontforge
-RUN git checkout e688b8c4dc634dcc128709f84b98f2407294f3fb
-RUN curl -L https://github.com/fontforge/fontforge/files/2065028/addPosSubBytesString-patch.txt | patch -p1
+RUN git checkout dad4fb502202e8b467d571f5ab0f07b7a3565f69
 RUN ./bootstrap
 RUN ./configure --prefix=/usr && make && make install
 
