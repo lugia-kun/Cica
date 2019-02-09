@@ -29,7 +29,7 @@ SOURCE = './sourceFonts'
 LICENSE = open('./LICENSE.font.txt').read()
 LICENSE_URL = "http://scripts.sil.org/OFL"
 COPYRIGHT = open('./COPYRIGHT.txt').read()
-VERSION = '0.5.0'
+VERSION = '1.0.0'
 FAMILY = 'Ocami'
 ITALIC_ANGLE = -9
 ITALIC_SKEW = psMat.skew(-ITALIC_ANGLE / 180.0 * math.pi)
@@ -812,12 +812,16 @@ def build_font(_f, source_han_subset, save_sfd):
                               [
                                   (0x0020,0x007e), # Latin
                                   (0x00a0,0x036f), # Latin-Extended
+                                  (0x0400,0x052f), # Cyrillic
                                    0x0e3f,         # Thai
                                   (0x1e80,0x1eff), # Latin-Extended-Additional
                                   (0x2000,0x20cf), # Puct, Sup/Sub, Currency
                                   (0x2100,0x215f), # Litter like, Number form
                                   (0x2190,0x21ff), # Arrows
                                   (0x2200,0x22ff), # Maths
+                                  (0x25a0,0x25ff), # Geometric shapes
+                                  (0x2b00,0x2bff), # Misc. symbols and arrows
+                                  (0x2700,0x27bf), # Dingbats
                                    0xebe7,         # Fun
                                   (0xf6d7,0xf6d8), # ?
                                   (0xfb01,0xfb02), # Lig forms
@@ -826,7 +830,6 @@ def build_font(_f, source_han_subset, save_sfd):
     add_ibm_plex_or_fira_mono(build, sources["fira_mono"], _f["italic"],
                               [
                                   (0x0370,0x03ff), # Greek
-                                  (0x0400,0x052f), # Cyrillic
                                   (0x1f00,0x1fff), # Geek Extended
                                   (0x2300,0x23ff), # Misc Technical
                                   (0x25a0,0x267f), # Misc Symbols
