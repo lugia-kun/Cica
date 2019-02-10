@@ -3,8 +3,7 @@
 set -ev
 
 tag=$(git log -n1 --format=%H -- Dockerfile entrypoint.sh)
-docker pull lugiakun/ocami:$tag
-if [[ $? == 0 ]]; then
+if docker pull lugiakun/ocami:$tag; then
     docker tag lugiakun/ocami:$tag ocami_ocami:latest
 else
     docker-compose build
