@@ -15,6 +15,7 @@ RUN ./bootstrap
 RUN ./configure --prefix=/usr && make && make install
 
 WORKDIR /work
+RUN rm -rf fontforge
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT entrypoint.sh
