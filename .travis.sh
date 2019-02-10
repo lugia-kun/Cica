@@ -3,9 +3,9 @@
 set -ev
 
 tag=$(git log -n1 --format=%H -- Dockerfile entrypoint.sh)
-docker pull lugia-kun/ocami:$tag
+docker pull lugiakun/ocami:$tag
 if [[ $? == 0 ]]; then
-    docker tag lugia-kun/ocami:$tag ocami_ocami:latest
+    docker tag lugiakun/ocami:$tag ocami_ocami:latest
 else
     docker-compose build
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
