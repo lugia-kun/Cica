@@ -22,16 +22,16 @@ function getfont() {
     fi
 }
 
-getfont IBM_Plex-1.2.3 .zip \
-        https://github.com/IBM/plex/releases/download/v1.2.3/TrueType.zip \
-        IBM_Plex-1.2.3
+getfont IBM_Plex-1.4.1 .zip \
+        https://github.com/IBM/plex/releases/download/v1.4.1/TrueType.zip \
+        IBM_Plex-1.4.1
 getfont source-han-sans-2.000R .tar.gz \
         https://github.com/adobe-fonts/source-han-sans/archive/2.000R.tar.gz
 getfont Fira-4.202 .tar.gz \
         https://github.com/mozilla/Fira/archive/4.202.tar.gz
 
 for weight in Regular Italic Bold BoldItalic; do
-    cp IBM_Plex-1.2.3/TrueType/IBM-Plex-Mono/IBMPlexMono-$weight.ttf .
+    cp IBM_Plex-1.4.1/TrueType/IBM-Plex-Mono/IBMPlexMono-$weight.ttf .
 done
 
 for weight in Regular Bold; do
