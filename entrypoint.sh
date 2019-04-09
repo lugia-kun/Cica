@@ -25,8 +25,8 @@ function getfont() {
 getfont IBM_Plex-1.2.3 .zip \
         https://github.com/IBM/plex/releases/download/v1.2.3/TrueType.zip \
         IBM_Plex-1.2.3
-getfont source-han-sans-1.004R .tar.gz \
-        https://github.com/adobe-fonts/source-han-sans/archive/1.004R.tar.gz
+getfont source-han-sans-2.000R .tar.gz \
+        https://github.com/adobe-fonts/source-han-sans/archive/2.000R.tar.gz
 getfont Fira-4.202 .tar.gz \
         https://github.com/mozilla/Fira/archive/4.202.tar.gz
 
@@ -35,10 +35,10 @@ for weight in Regular Italic Bold BoldItalic; do
 done
 
 for weight in Regular Bold; do
-    cp source-han-sans-1.004R/OTF/Japanese/SourceHanSans-$weight.otf .
-    cp source-han-sans-1.004R/SubsetOTF/JP/SourceHanSansJP-$weight.otf .
+    cp source-han-sans-2.000R/OTF/Japanese/SourceHanSans-$weight.otf .
+    cp source-han-sans-2.000R/SubsetOTF/JP/SourceHanSansJP-$weight.otf .
 done
-cp source-han-sans-1.004R/Resources/utf32-jp.map .
+cp source-han-sans-2.000R/Resources/utf32-jp.map .
 
 for weight in Regular Bold; do
     cp Fira-4.202/ttf/FiraMono-$weight.ttf .
@@ -47,4 +47,4 @@ done
 
 popd
 
-fontforge -lang=py -script ocami.py
+/opt/fontforge/bin/fontforge -lang=py -script ocami.py

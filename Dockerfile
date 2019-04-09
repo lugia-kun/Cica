@@ -2,8 +2,8 @@ FROM ubuntu:18.04 AS fontforge-build
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
-    software-properties-common gcc libgtk-3-dev python3-dev libxml2-dev \
-    automake autoconf patch git
+    software-properties-common gcc python3-dev libxml2-dev \
+    gettext libtool libfreetype6-dev automake autoconf patch git
 
 WORKDIR /work
 RUN git clone https://github.com/fontforge/fontforge.git
@@ -16,7 +16,7 @@ RUN ./configure --prefix=/opt/fontforge && make && make install
 FROM ubuntu:18.04
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
-    libgtk-3-0 libpython3.6 libxml2 curl unar
+    libltdl7 libfreetype6 libpython3.6 libglib2.0-0 libxml2 curl unar
 
 WORKDIR /work
 COPY --from=fontforge-build /opt/fontforge /opt/fontforge

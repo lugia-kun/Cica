@@ -3,4 +3,4 @@ services:
 before_install:
 - "./.travis.sh"
 script:
-- docker-compose run --rm ocami
+- docker run --rm ocami_ocami:latest -v `pwd`:/work/Ocami

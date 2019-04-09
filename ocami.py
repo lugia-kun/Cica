@@ -29,7 +29,7 @@ SOURCE = './sourceFonts'
 LICENSE = open('./LICENSE.font.txt').read()
 LICENSE_URL = "http://scripts.sil.org/OFL"
 COPYRIGHT = open('./COPYRIGHT.txt').read()
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 FAMILY = 'Ocami'
 ITALIC_ANGLE = -9
 ITALIC_SKEW = psMat.skew(-ITALIC_ANGLE / 180.0 * math.pi)
@@ -193,23 +193,23 @@ def set_os2_values(_font, _info):
         _font.os2_stylemap = 33
     _font.os2_vendor = 'misc'
     _font.os2_version = 1
-    _font.os2_winascent = ASCENT
+    _font.os2_winascent = 1666
     _font.os2_winascent_add = False
-    _font.os2_windescent = DESCENT
+    _font.os2_windescent = 362
     _font.os2_windescent_add = False
 
-    _font.os2_typoascent = ASCENT
+    _font.os2_typoascent = 1263
     _font.os2_typoascent_add = False
-    _font.os2_typodescent = -DESCENT
+    _font.os2_typodescent = -341
     _font.os2_typodescent_add = False
     _font.os2_typolinegap = 0
 
-    _font.hhea_ascent = ASCENT
+    _font.hhea_ascent = 1666
     _font.hhea_ascent_add = False
-    _font.hhea_descent = -DESCENT
+    _font.hhea_descent = -362
     _font.hhea_descent_add = False
 
-    _font.hhea_linegap = 0
+    _font.hhea_linegap = 50
     _font.os2_panose = (2, 11, int(weight / 100), 9, 2, 2, 3, 2, 2, 7)
     return _font
 
