@@ -29,7 +29,7 @@ SOURCE = './sourceFonts'
 LICENSE = open('./LICENSE.font.txt').read()
 LICENSE_URL = "http://scripts.sil.org/OFL"
 COPYRIGHT = open('./COPYRIGHT.txt').read()
-VERSION = '2.0.0'
+VERSION = '2.0.1'
 FAMILY = 'Ocami'
 ITALIC_ANGLE = -9
 ITALIC_SKEW = psMat.skew(-ITALIC_ANGLE / 180.0 * math.pi)
@@ -450,7 +450,7 @@ def add_source_han_sans(target, source, italic):
                     x = ""
                 else:
                     x += ", "
-                x = "%s" % _(gid)
+                x += "%s" % _(gid)
             if not x is None:
                 s += "[" + x + "]"
             print(s, file = fp)
